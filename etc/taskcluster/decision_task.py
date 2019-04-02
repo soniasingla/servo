@@ -311,6 +311,10 @@ def windows_unit():
             "mach fetch",
 
             "mach build --dev",
+            "dir target\debug",
+            "c:\depends.exe /c /ot:servo.txt target\debug\Servo.exe",
+            "type servo.txt",
+            "mach smoketest --angle",
             "mach test-unit",
             "mach package --dev",
         )
