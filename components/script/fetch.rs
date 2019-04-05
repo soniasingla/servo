@@ -24,7 +24,7 @@ use crate::task_source::TaskSourceName;
 use ipc_channel::ipc;
 use ipc_channel::router::ROUTER;
 use js::jsapi::JSAutoCompartment;
-use net_traits::request::RequestInit as NetTraitsRequestInit;
+use net_traits::request::RequestBuilder as NetTraitsRequestInit;
 use net_traits::request::{Request as NetTraitsRequest, ServiceWorkersMode};
 use net_traits::CoreResourceMsg::Fetch as NetTraitsFetch;
 use net_traits::{FetchChannels, FetchResponseListener, NetworkError};
@@ -99,30 +99,32 @@ fn from_referrer_to_referrer_url(request: &NetTraitsRequest) -> Option<ServoUrl>
 }
 
 fn request_init_from_request(request: NetTraitsRequest) -> NetTraitsRequestInit {
-    NetTraitsRequestInit {
-        method: request.method.clone(),
-        url: request.url(),
-        headers: request.headers.clone(),
-        unsafe_request: request.unsafe_request,
-        body: request.body.clone(),
-        destination: request.destination,
-        synchronous: request.synchronous,
-        mode: request.mode.clone(),
-        use_cors_preflight: request.use_cors_preflight,
-        credentials_mode: request.credentials_mode,
-        use_url_credentials: request.use_url_credentials,
-        origin: GlobalScope::current()
+    NetTraitsRequestInit::new_with_all_fields(
+        request.method.clone(),
+        request.url(),
+        request.headers.clone(),
+        request.unsafe_request,
+        request.body.clone(),
+        ServiceWorkersMode::All,
+        request.destination,
+        request.synchronous,
+        request.mode.clone(),
+        request.cache_mode,
+        request.use_cors_preflight,
+        request.credentials_mode,
+        false,
+        GlobalScope::current()
             .expect("No current global object")
             .origin()
             .immutable()
             .clone(),
-        referrer_url: from_referrer_to_referrer_url(&request),
-        referrer_policy: request.referrer_policy,
-        pipeline_id: request.pipeline_id,
-        redirect_mode: request.redirect_mode,
-        cache_mode: request.cache_mode,
-        ..NetTraitsRequestInit::default()
-    }
+        from_referrer_to_referrer_url(&request),
+        request.referrer_policy,
+        request.pipeline_id,
+        request.redirect_mode,
+        "".to_owned(),
+        vec![],
+    )
 }
 
 // https://fetch.spec.whatwg.org/#fetch-method
